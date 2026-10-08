@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VOICE OVER STUDIO AI</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app-shell">
+<header class="topbar">
+  <div class="brand"><div class="brand-mark">VO</div><div><h1>VOICE OVER STUDIO <span>AI</span></h1><p>Professional AI Voice Over Workspace</p></div></div>
+  <div class="top-actions"><button class="ghost" id="newProject">＋ New Project</button><button class="ghost" id="saveProject">Save Project</button><button class="icon" id="themeBtn" title="Theme">☼</button></div>
+</header>
+<div class="workspace">
+<main>
+<section class="card script-card">
+  <div class="section-head"><div><h2>Script</h2><span id="status">Ready to create your voice over</span></div><div class="counter"><b id="charCount">0</b> chars · <b id="wordCount">0</b> words</div></div>
+  <textarea id="script" placeholder="Tulis atau paste naskah voice over di sini...\n\nContoh: Malam itu, semuanya terlihat normal. Sampai sebuah telepon mengubah hidupnya untuk selamanya."></textarea>
+  <div class="toolbar"><button class="soft" id="pasteBtn">📋 Paste</button><button class="soft" id="clearBtn">✕ Clear</button><div class="grow"></div><button class="soft ai" id="enhanceBtn">✨ Improve Script</button><button class="soft director" id="directorBtn">🎬 AI Voice Director</button></div>
+</section>
+<section class="card preview-card">
+  <div class="section-head"><div><h2>Voice Over Preview</h2><span id="providerLabel">Provider: loading…</span></div><span class="pill" id="jobPill">IDLE</span></div>
+  <div class="player"><div class="player-main"><button class="play" id="playBtn">▶</button><div class="wave"><div class="wave-line"></div><div class="wave-glow"></div></div><div class="time" id="time">00:00 / 00:00</div></div><audio id="audio" controls preload="metadata"></audio></div>
+  <div class="progress"><div id="progressFill"></div></div>
+  <div class="player-actions"><button class="soft" id="stopBtn">■ Stop</button><div class="grow"></div><a class="download" id="downloadMp3" download>⬇ Download MP3</a><button class="soft" id="downloadWav">⬇ Download WAV</button></div>
+</section>
+<section class="card history-card"><div class="section-head"><div><h2>Voice History</h2><span>Generated voice overs saved on this computer</span></div><button class="soft" id="refreshHistory">↻ Refresh</button></div><div id="history" class="history-list"><div class="empty">Belum ada hasil voice over.</div></div></section>
+</main>
+<aside>
+<section class="card settings">
+  <div class="section-head"><div><h2>Voice Studio</h2><span>Fine-tune your narration</span></div></div>
+  <label>Language<select id="language"></select></label>
+  <label>Voice<select id="voice"></select></label>
+  <div class="two"><label>Emotion<select id="emotion"></select></label><label>Pause<select id="pause"><option>Short</option><option>Medium</option><option>Long</option></select></label></div>
+  <label>Style<select id="style"><option>Natural</option><option>Storytelling</option><option>Cinematic</option><option>YouTube</option><option>TikTok</option><option>Advertisement</option></select></label>
+  <div class="film-row"><div><b>🎬 FILM STORY MODE</b><span>Narration khusus alur cerita film</span></div><label class="switch"><input type="checkbox" id="filmMode"><i></i></label></div>
+  <select id="filmStyle" class="film-style"><option>Normal Storytelling</option><option>Slow Storytelling</option><option>Fast Storytelling</option><option>Cinematic Storytelling</option></select>
+  <div class="slider-row"><div><span>Speed</span><b id="speedVal">1.0x</b></div><input type="range" id="speed" min="0.5" max="2" step="0.05" value="1"></div>
+  <div class="slider-row"><div><span>Pitch</span><b id="pitchVal">0</b></div><input type="range" id="pitch" min="-20" max="20" step="1" value="0"></div>
+  <div class="slider-row"><div><span>Volume</span><b id="volumeVal">100%</b></div><input type="range" id="volume" min="0" max="100" step="1" value="100"></div>
+  <div class="slider-row"><div><span>Emotion Intensity</span><b id="emotionVal">70%</b></div><input type="range" id="emotionIntensity" min="0" max="100" value="70"></div>
+  <button class="generate" id="generateBtn">🎙 Generate Voice</button><button class="stop-big" id="stopBig">■ Stop</button>
+  <div class="notice" id="notice">Voice engine belum dijalankan.</div>
+</section>
+<section class="card projects"><div class="section-head"><div><h2>Projects</h2><span>Save scripts & settings</span></div></div><div class="project-actions"><button class="soft" id="openProject">Open Project</button><button class="soft danger" id="deleteProject">Delete</button></div><select id="projectSelect"><option value="">— Select project —</option></select></section>
+<section class="card director-box"><div class="section-head"><div><h2>AI Voice Director</h2><span>Scene-aware delivery map</span></div></div><pre id="directorOutput">Klik “AI Voice Director” untuk menganalisis naskah.</pre></section>
+</aside>
+</div>
+<footer>VOICE OVER STUDIO AI · MVP · Provider TTS dapat diganti tanpa mengubah UI</footer>
+</div>
+<div id="toast" class="toast"></div>
+<script src="/static/app.js"></script>
+</body></html>
