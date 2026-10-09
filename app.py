@@ -113,6 +113,19 @@ EMOTIONS = {
     'Advertisement': {'rate':8,'pitch':2,'direction':'persuasive, energetic commercial delivery'},
 }
 
+VOICE_CHARACTERS = {
+    'Natural': {'rate': 0, 'pitch': 0},
+    'Deep': {'rate': -8, 'pitch': -4},
+    'Cinematic': {'rate': -10, 'pitch': -3},
+    'Storyteller': {'rate': -6, 'pitch': -1},
+    'News': {'rate': 2, 'pitch': 0},
+    'Energetic': {'rate': 12, 'pitch': 2},
+    'Calm': {'rate': -10, 'pitch': -2},
+    'Dramatic': {'rate': -5, 'pitch': -3},
+    'Young': {'rate': 8, 'pitch': 4},
+    'Older': {'rate': -12, 'pitch': -5},
+}
+
 STYLES = ['Natural','Storytelling','Cinematic','YouTube','TikTok','Advertisement']
 FILM_STYLES = ['Slow Storytelling','Normal Storytelling','Fast Storytelling','Cinematic Storytelling']
 
@@ -162,18 +175,41 @@ def smart_text(text, pause='Short', film_mode=False):
     return text
 
 
-def voice_params(voice_id, emotion, speed, pitch, volume, emotion_intensity=70):
-    e=EMOTIONS.get(emotion, EMOTIONS['Natural'])
-    intensity=clamp(float(emotion_intensity),0,100)/100.0
-    rate = clamp(float(speed),0.5,2.0)
-    # Edge rate is percent relative. Map 0.5-2.0 to -50..+100, then add emotion.
-    rate_pct = clamp((rate-1)*100 + e['rate']*intensity, -50, 100)
-    pitch_val = clamp(float(pitch) + e['pitch']*intensity, -20, 20)
-    vol_pct = clamp(float(volume),0,100)
-    # Edge accepts volume as percentage offset; 100 means normal volume.
-    vol_offset = vol_pct - 100
-    return f'{rate_pct:+.0f}%', f'{pitch_val:+.0f}Hz', f'{vol_offset:+.0f}%'
+def voice_params(voice_id, emotion, speed, pitch, volume, emotion_intensity=70, character='Natural'):
+    e = EMOTIONS.get(emotion, EMOTIONS['Natural'])
+    c = VOICE_CHARACTERS.get(character, VOICE_CHARACTERS['Natural'])
 
+    intensity = clamp(float(emotion_intensity), 0, 100) / 100.0
+    rate = clamp(float(speed), 0.5, 2.0)
+
+    # Base speed + character + emotion
+    rate_pct = clamp(
+        (rate - 1) * 100 +
+        c['rate'] +
+        e['rate'] * intensity,
+        -50,
+        100
+    )
+
+    # Base pitch + character + emotion
+    pitch_val = clamp(
+        float(pitch) +
+        c['pitch'] +
+        e['pitch'] * intensity,
+        -20,
+        20
+    )
+
+    vol_pct = clamp(float(volume), 0, 100)
+
+    # Edge TTS uses volume as percentage offset
+    vol_offset = vol_pct - 100
+
+    return (
+        f'{rate_pct:+.0f}%',
+        f'{pitch_val:+.0f}Hz',
+        f'{vol_offset:+.0f}%'
+    )
 
 def ffmpeg_concat(files, out_file):
     list_file = Path(tempfile.mkstemp(suffix='.txt')[1])
@@ -209,12 +245,20 @@ def simple_director(text):
         if i < len(sentences)-1: lines.append('[PAUSE]')
     return '\n'.join(lines)
 
-async def synthesize_job(text, voice, emotion, speed, pitch, volume, emotion_intensity, pause, film_mode, film_style):
+async def synthesize_job(text, voice, emotion, speed, pitch, volume, emotion_intensity, pause, film_mode, film_style, character='Natural'):
     processed=smart_text(text,pause,film_mode)
     parts=chunks(processed)
     if not parts: raise ValueError('Script kosong')
     film_speed={'Slow Storytelling':0.82,'Normal Storytelling':1.0,'Fast Storytelling':1.18,'Cinematic Storytelling':0.9}.get(film_style,1.0) if film_mode else 1.0
-    rate, p, vol = voice_params(voice,emotion,speed*film_speed,pitch,volume,emotion_intensity)
+    rate, p, vol = voice_params(
+    voice,
+    emotion,
+    speed * film_speed,
+    pitch,
+    volume,
+    emotion_intensity,
+    character
+)
     files=[]
     try:
         for part in parts:
@@ -232,7 +276,16 @@ def index(): return render_template('index.html')
 
 @app.get('/api/config')
 def config():
-    return jsonify({'languages':LANGUAGES,'voices':VOICE_MAP,'emotions':list(EMOTIONS.keys()),'styles':STYLES,'filmStyles':FILM_STYLES,'provider':PROVIDER.name,'aiConfigured':bool(os.getenv('OPENAI_API_KEY'))})
+    return jsonify({
+    'languages': LANGUAGES,
+    'voices': VOICE_MAP,
+    'emotions': list(EMOTIONS.keys()),
+    'characters': list(VOICE_CHARACTERS.keys()),
+    'styles': STYLES,
+    'filmStyles': FILM_STYLES,
+    'provider': PROVIDER.name,
+    'aiConfigured': bool(os.getenv('OPENAI_API_KEY'))
+})
 
 @app.post('/api/generate')
 def generate():
@@ -241,12 +294,27 @@ def generate():
     if not text: return jsonify({'error':'Naskah masih kosong.'}),400
     voice=data.get('voice','id-ID-ArdiNeural')
     emotion=data.get('emotion','Natural')
+    character=data.get('character','Natural')
     try:
         speed=float(data.get('speed',1)); pitch=float(data.get('pitch',0)); volume=float(data.get('volume',100))
     except: return jsonify({'error':'Pengaturan suara tidak valid.'}),400
     pause=data.get('pause','Short'); film=bool(data.get('filmMode')); emotion_intensity=float(data.get('emotionIntensity',70)); film_style=data.get('filmStyle','Normal Storytelling')
     try:
-        final,count=asyncio.run(synthesize_job(text,voice,emotion,speed,pitch,volume,emotion_intensity,pause,film,film_style))
+        final,count=asyncio.run(
+    synthesize_job(
+        text,
+        voice,
+        emotion,
+        speed,
+        pitch,
+        volume,
+        emotion_intensity,
+        pause,
+        film,
+        film_style,
+        character
+    )
+)
         rid=final.stem
         wav=AUDIO / f'{rid}.wav'
         try:
