@@ -325,8 +325,11 @@ def generate():
         item={'id':rid,'title':title,'createdAt':datetime.now().isoformat(timespec='seconds'),'voice':voice,'language':data.get('language','id-ID'),'emotion':emotion,'duration':'—','url':f'/audio/{final.name}','wavUrl':f'/audio/{wav.name}' if wav else None,'chunks':count}
         (PROJECTS / f'{rid}.json').write_text(json.dumps({'history':item,'script':text,'settings':data},ensure_ascii=False,indent=2),encoding='utf-8')
         return jsonify(item)
-    except Exception:
-        return jsonify({'error':'Voice over belum berhasil dibuat. Silakan coba lagi.'}),500
+except Exception:
+
+    app.logger.exception("Gagal membuat voice over pada /api/generate")
+
+    return jsonify({'error':'Voice over belum berhasil dibuat. Silakan coba lagi.'}),500
 
 @app.get('/api/history')
 def history():
