@@ -327,8 +327,10 @@ def generate():
         
         return jsonify(item)
         
- except Exception:
-         return jsonify({'error':'Voice over belum berhasil dibuat. Silakan coba lagi.'}),500
+    except Exception:
+        app.logger.exception("Gagal membuat voice over")
+        return jsonify({'error': 'Voice over belum berhasil dibuat. Silakan coba lagi.'}), 500
+
 
 @app.get('/api/history')
 def history():
